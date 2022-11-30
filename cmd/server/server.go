@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"bufio"
@@ -15,7 +15,6 @@ import (
 var opts struct {
 	Iface  string `short:"i" long:"host" description:"Interface address on which to bind" default:"127.0.0.1" required:"true"`
 	Port   string `short:"p" long:"port" description:"Port on which to bind" default:"9000" required:"true"`
-	Keys   string `short:"k" long:"keys" description:"Path to folder with server.{pem,key}" default:"./certs" required:"true"`
 	Socket string `short:"s" long:"socket" description:"Domain socket from which the program reads"`
 }
 
@@ -42,7 +41,10 @@ func Server() {
 		log.Fatal(err)
 	}
 	defer listener.Close()
+	waitingForConnections(listener)
+}
 
+func waitingForConnections(listener net.Listener) {
 	for {
 		conn, err := listener.Accept()
 		defer conn.Close()
@@ -50,7 +52,7 @@ func Server() {
 			fmt.Println(err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, listener)
 	}
 }
 
@@ -67,15 +69,16 @@ func newTLSListener() (net.Listener, error) {
 	return tls.Listen("tcp", connStr, config)
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, listener net.Listener) {
+	fmt.Println("INFO[0001] Agent joined.")
 	reader, writer := bufio.NewReader(conn), bufio.NewWriter(conn)
 
-	// A.B.C - Always Be Checking if there's new data to pull down on the wire
 	go func() {
 		for {
 			out, err := reader.ReadByte()
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println("INFO[0002] Lost connection with an agent.")
+				waitingForConnections(listener)
 			}
 			fmt.Printf(string(out))
 		}

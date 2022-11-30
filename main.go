@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/QU35T-code/gtsh/cmd"
+	"github.com/QU35T-code/gtsh/cmd/server"
 	"github.com/QU35T-code/gtsh/internal/manager"
 	"github.com/briandowns/spinner"
 	"github.com/jessevdk/go-flags"
@@ -30,7 +30,7 @@ func init() {
 }
 
 func main() {
-	go cmd.Server()
+	go server.Server()
 	fmt.Println(fmt.Sprintf("Listening on : %s:%s", opts.Iface, opts.Port))
 	manager.Menu()
 }

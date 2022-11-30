@@ -2,3 +2,5 @@ build/
 certs/*.key
 certs/*.pem
 gtsh
+client
+main
