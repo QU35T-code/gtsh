@@ -6,8 +6,11 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"path"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -32,20 +35,34 @@ func Server() {
 	var listener net.Listener
 	var err error
 
-	fmt.Println("[Start] Listener...")
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	s := spinner.New(spinner.CharSets[34], 200*time.Millisecond)
+	s.Start()
+	s.Suffix = (" Start Listener...")
+	time.Sleep(2 * time.Second)
+	s.Suffix = (" Waiting Connections...")
 	listener, err = newTLSListener()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer listener.Close()
 
+	// CTRL + C
+	for sig := range c {
+		fmt.Println(sig)
+		s.Stop()
+		os.Exit(0)
+	}
+
+	defer listener.Close()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, s)
 	}
 }
 
@@ -62,6 +79,7 @@ func newTLSListener() (net.Listener, error) {
 	return tls.Listen("tcp", connStr, config)
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, s *spinner.Spinner) {
+	s.Stop()
 	fmt.Println("[EVENT] Connection received...")
 }
