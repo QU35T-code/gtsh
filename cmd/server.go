@@ -1,17 +1,15 @@
 package cmd
 
 import (
+	"bufio"
 	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
 	"os"
-	"os/signal"
-	"path"
-	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/jessevdk/go-flags"
+	"github.com/mattn/go-tty"
 )
 
 var opts struct {
@@ -35,40 +33,30 @@ func Server() {
 	var listener net.Listener
 	var err error
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-
-	s := spinner.New(spinner.CharSets[34], 200*time.Millisecond)
-	s.Start()
-	s.Suffix = (" Start Listener...")
-	time.Sleep(2 * time.Second)
-	s.Suffix = (" Waiting Connections...")
-	listener, err = newTLSListener()
+	if opts.Socket == "" {
+		listener, err = newTLSListener()
+	} else {
+		listener, err = net.Listen("unix", opts.Socket)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// CTRL + C
-	for sig := range c {
-		fmt.Println(sig)
-		s.Stop()
-		os.Exit(0)
-	}
-
 	defer listener.Close()
+
 	for {
 		conn, err := listener.Accept()
+		defer conn.Close()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		go handleConnection(conn, s)
+		go handleConnection(conn)
 	}
 }
 
 func newTLSListener() (net.Listener, error) {
-	pem := path.Join(opts.Keys, "server.pem")
-	key := path.Join(opts.Keys, "server.key")
+	pem := "./certs/server.pem"
+	key := "./certs/server.key"
 	cer, err := tls.LoadX509KeyPair(pem, key)
 	if err != nil {
 		log.Fatal(err)
@@ -79,7 +67,39 @@ func newTLSListener() (net.Listener, error) {
 	return tls.Listen("tcp", connStr, config)
 }
 
-func handleConnection(conn net.Conn, s *spinner.Spinner) {
-	s.Stop()
-	fmt.Println("[EVENT] Connection received...")
+func handleConnection(conn net.Conn) {
+	reader, writer := bufio.NewReader(conn), bufio.NewWriter(conn)
+
+	// A.B.C - Always Be Checking if there's new data to pull down on the wire
+	go func() {
+		for {
+			out, err := reader.ReadByte()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf(string(out))
+		}
+	}()
+
+	teaTeeWhy, err := tty.Open()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer teaTeeWhy.Close()
+
+	go func() {
+		for ws := range teaTeeWhy.SIGWINCH() {
+			fmt.Println("Resized", ws.W, ws.H)
+		}
+	}()
+
+	for {
+		key, err := teaTeeWhy.ReadRune()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		writer.WriteRune(key)
+		writer.Flush()
+	}
 }

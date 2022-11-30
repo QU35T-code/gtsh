@@ -14,10 +14,20 @@ func Menu() {
 
 	App.AddCommand(&grumble.Command{
 		Name:  "sessions",
-		Help:  "Show all sessions",
+		Help:  "Display all sessions",
 		Usage: "sessions",
 		Run: func(c *grumble.Context) error {
-			sessions()
+			sessions(c)
+			return nil
+		},
+	})
+
+	App.AddCommand(&grumble.Command{
+		Name:  "status",
+		Help:  "Shows the status of modules",
+		Usage: "status",
+		Run: func(c *grumble.Context) error {
+			status()
 			return nil
 		},
 	})

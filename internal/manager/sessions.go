@@ -1,35 +1,33 @@
 package manager
 
 import (
-	"fmt"
-	"os"
-	"text/tabwriter"
+	"github.com/desertbit/grumble"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 type session struct {
-	ID       int
-	OS       string
-	IP       string
-	username string
+	id       int
+	os       string
+	ip       string
 	hostname string
+	account  string
 }
 
-func sessions() {
-	fmt.Println("Sessions\n")
-	tab_writer := tabwriter.NewWriter(os.Stdout, 20, 8, 5, '\t', tabwriter.AlignRight)
+func sessions(c *grumble.Context) {
+	t := table.NewWriter()
+	t.SetStyle(table.StyleLight)
+	t.SetTitle("Sessions")
+	t.AppendHeader(table.Row{"#", "OS", "IP Address", "Hostname", "Account"})
 
-	// Example
-	c1 := session{1, "Linux", "127.0.0.1", "root", "heist"}
-	c2 := session{2, "Linux", "10.10.14.36", "yakei", "response"}
-	c3 := session{3, "Windows", "192.168.42.132", "qu35t", "flight"}
-	session_list := []session{c1, c2, c3}
-	fmt.Fprintln(tab_writer, "ID\tOS\tIP\tUsername\tHostname\t")
-	fmt.Fprintln(tab_writer, "-------------------------------------------------------------------------------------------------------------")
-	for _, v := range session_list {
-		// TODO FIX this hardcoded line
-		fmt.Fprint(tab_writer, v.ID, "\t", v.OS, "\t", v.IP, "\t", v.username, "\t", v.hostname, "\t\n")
-		fmt.Fprintln(tab_writer, "-------------------------------------------------------------------------------------------------------------")
+	// TODO
+	// Remove temporary table
+	c1 := session{1, "Linux", "127.0.0.1", "heist", "root"}
+	c2 := session{2, "Linux", "10.10.14.36", "response", "yakei"}
+	c3 := session{3, "Windows", "192.168.42.132", "flight", "qu35t"}
+
+	SessionsList := []session{c1, c2, c3}
+	for _, session := range SessionsList {
+		t.AppendRow(table.Row{session.id, session.os, session.ip, session.hostname, session.account})
 	}
-	tab_writer.Flush()
-	fmt.Println()
+	c.App.Println(t.Render())
 }
