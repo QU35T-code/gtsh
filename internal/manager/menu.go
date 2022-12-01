@@ -22,15 +22,5 @@ func Menu() {
 		},
 	})
 
-	App.AddCommand(&grumble.Command{
-		Name:  "status",
-		Help:  "Shows the status of modules",
-		Usage: "status",
-		Run: func(c *grumble.Context) error {
-			status()
-			return nil
-		},
-	})
-
 	grumble.Main(App)
 }

@@ -18,8 +18,6 @@ var opts struct {
 	Port  string `short:"p" long:"port" description:"Port on which to bind" default:"9000" required:"true"`
 }
 
-var infoCounter int
-
 func init() {
 	_, err := flags.Parse(&opts)
 	if err != nil {
@@ -60,8 +58,6 @@ func streamSend(session *yamux.Session, data string) string {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Data sent : %s\n", data)
-	fmt.Println("Wait to receive response from client !")
 	for {
 		conn, err := session.Accept()
 		if err != nil {
@@ -93,7 +89,6 @@ func handle(conn net.Conn) {
 		log.Fatalf("Yamux server: %s", err)
 	}
 	NewAgent(session)
-	infoCounter++
 }
 
 func Server() {

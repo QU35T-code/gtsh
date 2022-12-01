@@ -3,4 +3,5 @@ certs/*.key
 certs/*.pem
 gtsh
 ./client
+./utils
 main

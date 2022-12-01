@@ -24,8 +24,6 @@ func init() {
 var ipCounter int
 
 func NewSession(informations []string) {
-	fmt.Println("Adding agent to the session table !")
-	fmt.Println(informations)
 	agent := sessionstruct{
 		id:       ipCounter,
 		os:       informations[0],
@@ -35,6 +33,8 @@ func NewSession(informations []string) {
 	}
 	AgentList[agent.id] = agent
 	ipCounter++
+
+	fmt.Printf("INFO[0001] Agent joined from %s - [%s | %s | %s]\n", "TODO", informations[2], informations[1], informations[0])
 }
 
 func sessions(c *grumble.Context) {
