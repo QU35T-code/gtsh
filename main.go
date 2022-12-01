@@ -11,9 +11,8 @@ import (
 )
 
 var opts struct {
-	Iface  string `short:"i" long:"host" description:"Interface address on which to bind" default:"127.0.0.1" required:"true"`
-	Port   string `short:"p" long:"port" description:"Port on which to bind" default:"9000" required:"true"`
-	Socket string `short:"s" long:"socket" description:"Domain socket from which the program reads"`
+	Iface string `short:"i" long:"host" description:"Interface address on which to bind" default:"127.0.0.1" required:"true"`
+	Port  string `short:"p" long:"port" description:"Port on which to bind" default:"9000" required:"true"`
 }
 
 func init() {
@@ -28,6 +27,6 @@ func init() {
 
 func main() {
 	go server.Server()
-	fmt.Println(fmt.Sprintf("Listening on : %s:%s", opts.Iface, opts.Port))
+	fmt.Printf("Listening on : %s:%s\n", opts.Iface, opts.Port)
 	manager.Menu()
 }

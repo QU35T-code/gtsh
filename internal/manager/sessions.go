@@ -23,18 +23,18 @@ func init() {
 
 var ipCounter int
 
-func NewSession(informations []string) {
+func NewSession(informations []string, ip string) {
 	agent := sessionstruct{
 		id:       ipCounter,
 		os:       informations[0],
-		ip:       "TODO",
+		ip:       ip,
 		hostname: informations[1],
 		account:  informations[2],
 	}
 	AgentList[agent.id] = agent
 	ipCounter++
 
-	fmt.Printf("INFO[0001] Agent joined from %s - [%s | %s | %s]\n", "TODO", informations[2], informations[1], informations[0])
+	fmt.Printf("INFO[0001] Agent joined from %s - [%s | %s | %s]\n", ip, informations[2], informations[1], informations[0])
 }
 
 func sessions(c *grumble.Context) {

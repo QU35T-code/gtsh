@@ -28,10 +28,10 @@ func init() {
 	}
 }
 
-func streamReceive(sconn net.Conn) string {
+func streamReceive(conn net.Conn) string {
 	buff := make([]byte, 0xff)
 	for {
-		n, err := sconn.Read(buff)
+		n, err := conn.Read(buff)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -39,7 +39,6 @@ func streamReceive(sconn net.Conn) string {
 			log.Printf("Stream read error: %s", err)
 			break
 		}
-		fmt.Printf("Data received : %s\n", buff[:n])
 		data := string(buff[:n])
 		return data
 	}
@@ -74,13 +73,20 @@ func streamSend(session *yamux.Session, data string) string {
 	return ""
 }
 
-func NewAgent(session *yamux.Session) {
+// var ConnectionList map[int]net.Conn
+
+// var ConnectionList []net.Conn
+
+func NewAgent(session *yamux.Session, conn net.Conn) {
 	// TODO
 	// Change this by multiple commands ? Better ?
 	hello := streamSend(session, "hello")
 	info := strings.Split(hello, "--")
 
-	go manager.NewSession(info)
+	// Add conn to the list
+	// ConnectionList = make(map[int]net.Conn)
+	manager.AddConnection(conn)
+	go manager.NewSession(info, conn.RemoteAddr().String())
 }
 
 func handle(conn net.Conn) {
@@ -88,7 +94,7 @@ func handle(conn net.Conn) {
 	if err != nil {
 		log.Fatalf("Yamux server: %s", err)
 	}
-	NewAgent(session)
+	NewAgent(session, conn)
 }
 
 func Server() {
