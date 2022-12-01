@@ -7,11 +7,8 @@ import (
 
 	"github.com/QU35T-code/gtsh/cmd/server"
 	"github.com/QU35T-code/gtsh/internal/manager"
-	"github.com/briandowns/spinner"
 	"github.com/jessevdk/go-flags"
 )
-
-var spin *spinner.Spinner
 
 var opts struct {
 	Iface  string `short:"i" long:"host" description:"Interface address on which to bind" default:"127.0.0.1" required:"true"`

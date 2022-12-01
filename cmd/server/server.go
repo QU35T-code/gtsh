@@ -1,22 +1,24 @@
 package server
 
 import (
-	"bufio"
-	"crypto/tls"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 
+	"github.com/QU35T-code/gtsh/internal/manager"
+	"github.com/hashicorp/yamux"
 	"github.com/jessevdk/go-flags"
-	"github.com/mattn/go-tty"
 )
 
 var opts struct {
-	Iface  string `short:"i" long:"host" description:"Interface address on which to bind" default:"127.0.0.1" required:"true"`
-	Port   string `short:"p" long:"port" description:"Port on which to bind" default:"9000" required:"true"`
-	Socket string `short:"s" long:"socket" description:"Domain socket from which the program reads"`
+	Iface string `short:"i" long:"host" description:"Interface address on which to bind" default:"127.0.0.1" required:"true"`
+	Port  string `short:"p" long:"port" description:"Port on which to bind" default:"9000" required:"true"`
 }
+
+var infoCounter int
 
 func init() {
 	_, err := flags.Parse(&opts)
@@ -28,104 +30,83 @@ func init() {
 	}
 }
 
-// var messages chan string
-
-func Server() {
-	var listener net.Listener
-	var err error
-
-	// messages = make(chan string)
-
-	// go func() {
-	// 	for {
-	// 		message := <-messages
-	// 		fmt.Println(message)
-	// 	}
-	// }()
-
-	if opts.Socket == "" {
-		listener, err = newTLSListener()
-	} else {
-		listener, err = net.Listen("unix", opts.Socket)
+func streamReceive(sconn net.Conn) string {
+	buff := make([]byte, 0xff)
+	for {
+		n, err := sconn.Read(buff)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			log.Printf("Stream read error: %s", err)
+			break
+		}
+		fmt.Printf("Data received : %s\n", buff[:n])
+		data := string(buff[:n])
+		return data
 	}
+	return ""
+}
+
+func streamSend(session *yamux.Session, data string) string {
+	stream, err := session.Open()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer listener.Close()
-	waitingForConnections(listener)
-}
 
-func waitingForConnections(listener net.Listener) {
+	n, err := stream.Write([]byte(data))
+	_ = n
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Data sent : %s\n", data)
+	fmt.Println("Wait to receive response from client !")
 	for {
-		conn, err := listener.Accept()
+		conn, err := session.Accept()
 		if err != nil {
-			fmt.Println(err)
-			conn.Close()
-		}
-		// defer conn.Close()
-		if err != nil {
-			fmt.Println(err)
+			if session.IsClosed() {
+				log.Printf("TCP closed")
+				break
+			}
+			log.Printf("Yamux accept: %s", err)
 			continue
 		}
-		handleConnection(conn, listener)
+		data := streamReceive(conn)
+		return data
 	}
+	return ""
 }
 
-func newTLSListener() (net.Listener, error) {
-	pem := "./certs/server.pem"
-	key := "./certs/server.key"
-	cer, err := tls.LoadX509KeyPair(pem, key)
+func NewAgent(session *yamux.Session) {
+	// TODO
+	// Change this by multiple commands ? Better ?
+	hello := streamSend(session, "hello")
+	info := strings.Split(hello, "--")
+
+	go manager.NewSession(info)
+}
+
+func handle(conn net.Conn) {
+	session, err := yamux.Server(conn, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Yamux server: %s", err)
 	}
-
-	config := &tls.Config{Certificates: []tls.Certificate{cer}}
-	connStr := fmt.Sprintf("%s:%s", opts.Iface, opts.Port)
-	return tls.Listen("tcp", connStr, config)
+	NewAgent(session)
+	infoCounter++
 }
 
-func registerAgent(conn net.Conn) {
-	// ip := conn.RemoteAddr().String()
-	// fmt.Println(ip)
-}
-
-func handleConnection(conn net.Conn, listener net.Listener) {
-	fmt.Printf("INFO[0001] Agent joined from %s\n", conn.RemoteAddr().String())
-	registerAgent(conn)
-	// messages <- "INFO[0001] Agent joined."
-	reader, writer := bufio.NewReader(conn), bufio.NewWriter(conn)
-
-	go func() {
-		for {
-			out, err := reader.ReadByte()
-			if err != nil {
-				fmt.Println("\nINFO[0002] Lost connection with an agent.")
-				// messages <- "INFO[0002] Lost connection with an agent."
-				waitingForConnections(listener)
-			}
-			fmt.Printf(string(out))
-		}
-	}()
-
-	teaTeeWhy, err := tty.Open()
+func Server() {
+	l, err := net.Listen("tcp4", fmt.Sprintf("%s:%s", opts.Iface, opts.Port))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("TCP server: %s", err)
 	}
-	defer teaTeeWhy.Close()
-
-	go func() {
-		for ws := range teaTeeWhy.SIGWINCH() {
-			fmt.Println("Resized", ws.W, ws.H)
-		}
-	}()
 
 	for {
-		key, err := teaTeeWhy.ReadRune()
+		conn, err := l.Accept()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TCP accept: %s", err)
 		}
-
-		writer.WriteRune(key)
-		writer.Flush()
+		go handle(conn)
 	}
 }
