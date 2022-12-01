@@ -28,9 +28,20 @@ func init() {
 	}
 }
 
+// var messages chan string
+
 func Server() {
 	var listener net.Listener
 	var err error
+
+	// messages = make(chan string)
+
+	// go func() {
+	// 	for {
+	// 		message := <-messages
+	// 		fmt.Println(message)
+	// 	}
+	// }()
 
 	if opts.Socket == "" {
 		listener, err = newTLSListener()
@@ -47,12 +58,16 @@ func Server() {
 func waitingForConnections(listener net.Listener) {
 	for {
 		conn, err := listener.Accept()
-		defer conn.Close()
+		if err != nil {
+			fmt.Println(err)
+			conn.Close()
+		}
+		// defer conn.Close()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		go handleConnection(conn, listener)
+		handleConnection(conn, listener)
 	}
 }
 
@@ -69,15 +84,23 @@ func newTLSListener() (net.Listener, error) {
 	return tls.Listen("tcp", connStr, config)
 }
 
+func registerAgent(conn net.Conn) {
+	// ip := conn.RemoteAddr().String()
+	// fmt.Println(ip)
+}
+
 func handleConnection(conn net.Conn, listener net.Listener) {
-	fmt.Println("INFO[0001] Agent joined.")
+	fmt.Printf("INFO[0001] Agent joined from %s\n", conn.RemoteAddr().String())
+	registerAgent(conn)
+	// messages <- "INFO[0001] Agent joined."
 	reader, writer := bufio.NewReader(conn), bufio.NewWriter(conn)
 
 	go func() {
 		for {
 			out, err := reader.ReadByte()
 			if err != nil {
-				fmt.Println("INFO[0002] Lost connection with an agent.")
+				fmt.Println("\nINFO[0002] Lost connection with an agent.")
+				// messages <- "INFO[0002] Lost connection with an agent."
 				waitingForConnections(listener)
 			}
 			fmt.Printf(string(out))
