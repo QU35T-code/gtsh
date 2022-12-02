@@ -1,6 +1,17 @@
 package app
 
-func interract(sessionID int) {
+import (
+	"github.com/desertbit/grumble"
+)
+
+func interract(args grumble.ArgMap) {
+	agent := AgentList[args.Int("id")]
+	_ = agent
+
+	// stream, err := agent.Session.Open()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// TODO
 	// If only 1 session exists, interact without argument
@@ -11,13 +22,14 @@ func interract(sessionID int) {
 
 	// sh := ishell.NewWithConfig(&readline.Config{
 	// 	Prompt:      "[ # ]> ",
-	// 	Stdin:       ConnectionList[0],
-	// 	StdinWriter: ConnectionList[0],
-	// 	Stdout:      ConnectionList[0],
-	// 	Stderr:      ConnectionList[0],
+	// 	Stdin:       stream,
+	// 	StdinWriter: stream,
+	// 	Stdout:      stream,
+	// 	Stderr:      stream,
 	// 	VimMode:     true,
 	// })
 
 	// sh.Run()
+	// agent.Session.Close()
 	// os.Exit(0)
 }

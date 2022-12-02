@@ -42,7 +42,7 @@ func Run() {
 			a.Int("id", "session id")
 		},
 		Run: func(c *grumble.Context) error {
-			interract(c.Args.Int("id"))
+			interract(c.Args)
 			return nil
 		},
 	})
@@ -57,6 +57,19 @@ func Run() {
 		},
 		Run: func(c *grumble.Context) error {
 			command(c.Args)
+			return nil
+		},
+	})
+
+	App.AddCommand(&grumble.Command{
+		Name:  "kill",
+		Help:  "Kill a session",
+		Usage: "kill",
+		Args: func(a *grumble.Args) {
+			a.Int("id", "session id")
+		},
+		Run: func(c *grumble.Context) error {
+			kill(c.Args)
 			return nil
 		},
 	})
