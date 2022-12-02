@@ -1,16 +1,25 @@
-package manager
+package app
 
 import (
+	"github.com/QU35T-code/gtsh/pkg/server"
 	"github.com/desertbit/grumble"
 )
 
-func Menu() {
-	var App = grumble.New(&grumble.Config{
-		Name:                  "gtsh",
-		Description:           "Give That Shell !",
-		HelpHeadlineUnderline: true,
-		HelpSubCommands:       true,
-	})
+var App = grumble.New(&grumble.Config{
+	Name:                  "gtsh",
+	Description:           "Give That Shell !",
+	HelpHeadlineUnderline: true,
+	HelpSubCommands:       true,
+})
+
+var AgentList map[int]server.GTSHAgent
+
+func RegisterAgent(agent server.GTSHAgent) {
+	AgentList[agent.Id] = agent
+}
+
+func Run() {
+	AgentList = make(map[int]server.GTSHAgent)
 
 	App.AddCommand(&grumble.Command{
 		Name:  "sessions",
@@ -48,6 +57,4 @@ func Menu() {
 			return nil
 		},
 	})
-
-	grumble.Main(App)
 }
