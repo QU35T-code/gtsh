@@ -69,7 +69,7 @@ func Run() {
 			a.Int("id", "session id")
 		},
 		Run: func(c *grumble.Context) error {
-			kill(c.Args)
+			killSession(c.Args)
 			return nil
 		},
 	})
