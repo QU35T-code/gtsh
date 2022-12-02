@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/QU35T-code/gtsh/pkg/server"
 	"github.com/desertbit/grumble"
 )
@@ -15,6 +17,7 @@ var App = grumble.New(&grumble.Config{
 var AgentList map[int]server.GTSHAgent
 
 func RegisterAgent(agent server.GTSHAgent) {
+	fmt.Printf("INFO[0001] Agent joined from %s\n", agent.Session.RemoteAddr().String())
 	AgentList[agent.Id] = agent
 }
 

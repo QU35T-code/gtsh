@@ -8,6 +8,9 @@ import (
 	"github.com/hashicorp/yamux"
 )
 
+var ConnectionList map[int]net.Conn
+var Connection chan net.Conn
+
 func ListenAndServer(listenInterface string) {
 	l, err := net.Listen("tcp4", listenInterface)
 	if err != nil {
@@ -66,9 +69,6 @@ func StreamSend(session *yamux.Session, data string) string {
 	}
 	return ""
 }
-
-var ConnectionList map[int]net.Conn
-var Connection chan net.Conn
 
 func New() {
 	Connection = make(chan net.Conn, 1024)

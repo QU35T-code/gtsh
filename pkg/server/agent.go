@@ -1,6 +1,10 @@
 package server
 
-import "github.com/hashicorp/yamux"
+import (
+	"strings"
+
+	"github.com/hashicorp/yamux"
+)
 
 type GTSHAgent struct {
 	Id       int
@@ -11,22 +15,18 @@ type GTSHAgent struct {
 	Session  *yamux.Session
 }
 
+var ipCounter int
+
 func NewAgent(session *yamux.Session) GTSHAgent {
+	hello := StreamSend(session, "hello")
+	sessionInformations := strings.Split(hello, "--")
+	ipCounter++
 	return GTSHAgent{
-		Id:       1,
-		Os:       "test",
-		Ip:       "10.10.10.10",
-		Hostname: "test-hostname",
-		Account:  "root",
+		Id:       ipCounter,
+		Os:       sessionInformations[0],
+		Ip:       session.RemoteAddr().String(),
+		Hostname: sessionInformations[1],
+		Account:  sessionInformations[2],
 		Session:  session,
 	}
-	// TODO
-	// Change this by multiple commands ? Better ?
-	// hello := streamSend(session, "hello")
-	// info := strings.Split(hello, "--")
-
-	// Add conn to the list
-	// ConnectionList = make(map[int]net.Conn)
-	// manager.AddConnection(conn)
-	// go manager.NewSession(info, conn.RemoteAddr().String())
 }

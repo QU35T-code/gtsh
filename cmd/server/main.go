@@ -22,12 +22,11 @@ func main() {
 	go func() {
 		for {
 			remoteConn := <-server.Connection
-			yamuxConn, err := yamux.Client(remoteConn, nil)
+			yamuxConn, err := yamux.Server(remoteConn, nil)
 			if err != nil {
 				panic(err)
 			}
 			agent := server.NewAgent(yamuxConn)
-			fmt.Printf("INFO[0001] Agent joined from %s\n", yamuxConn.RemoteAddr().String())
 			app.RegisterAgent(agent)
 		}
 	}()
